@@ -1,0 +1,8 @@
+{
+  "availability-zones:account=530830676072:region=ap-southeast-1": [
+    "ap-southeast-1a",
+    "ap-southeast-1b",
+    "ap-southeast-1c"
+  ],
+  "ami:account=530830676072:filters.architecture.0=arm64:filters.image-type.0=machine:filters.name.0=debian-12-arm64-*:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:owners.0=136693071363:region=ap-southeast-1": "ami-06109734e61069e30"
+}
