@@ -139,3 +139,24 @@ To remove resources created by **AWS CDK**:
 ```bash
 cdk destroy
 ```
+
+**SSB RONPOS Staging Environment**
+----------------------------------
+
+Reconfigure AWS SSO to use the latest session token
+1. set AWS environment variable with the latest session token in the project
+```bash
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_SESSION_TOKEN=
+```
+
+2. reconfigure AWS credentials to include the new profile
+```bash
+rm -rf ~/.aws/credentials
+echo "[Profile Name]
+aws_access_key_id = 
+aws_secret_access_key = 
+aws_session_token = 
+" >> ~/.aws/credentials
+```
