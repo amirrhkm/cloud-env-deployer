@@ -96,17 +96,17 @@ func env() *awscdk.Environment {
 	// Uncomment if you know exactly what account and region you want to deploy
 	// the stack to. This is the recommendation for production stacks.
 	//---------------------------------------------------------------------------
-	return &awscdk.Environment{
-		Account: jsii.String("530830676072"),
-		Region:  jsii.String("ap-southeast-1"),
-	}
+	// return &awscdk.Environment{
+	// 	Account: jsii.String("123456789"),
+	// 	Region:  jsii.String("us-west-1"),
+	// }
 
 	// Uncomment to specialize this stack for the AWS Account and Region that are
 	// implied by the current CLI configuration. This is recommended for dev
 	// stacks.
 	//---------------------------------------------------------------------------
-	// return &awscdk.Environment{
-	//  Account: jsii.String(os.Getenv("CDK_DEFAULT_ACCOUNT")),
-	//  Region:  jsii.String(os.Getenv("CDK_DEFAULT_REGION")),
-	// }
+	return &awscdk.Environment{
+		Account: jsii.String(os.Getenv("CDK_DEFAULT_ACCOUNT")),
+		Region:  jsii.String(os.Getenv("CDK_DEFAULT_REGION")),
+	}
 }
