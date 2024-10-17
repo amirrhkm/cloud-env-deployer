@@ -50,20 +50,15 @@ func MonitoringHubStack(scope constructs.Construct, id string, props *Monitoring
 
 	keyPair := awsec2.KeyPair_FromKeyPairName(stack, jsii.String("ExistingKeyPair"), jsii.String("amir"))
 
-	userData := awsec2.UserData_ForLinux(
+	// <--- RHEL 9 --->
+	rhel_userData := awsec2.UserData_ForLinux(
 		&awsec2.LinuxUserDataOptions{
 			Shebang: jsii.String("#!/bin/bash"),
 		},
 	)
 
-	// <--- Debian 12 User Data --->
-	// userData.AddCommands(
-	// 	jsii.String("sudo apt update"),
-	// 	jsii.String("sudo apt install -y docker.io docker-compose awscli"),
-	// )
-
 	// <--- RHEL 9 User Data --->
-	userData.AddCommands(
+	rhel_userData.AddCommands(
 		jsii.String("sudo dnf update -y"),
 		jsii.String("sudo dnf install -y docker"),
 		jsii.String("sudo systemctl enable --now docker"),
@@ -71,20 +66,9 @@ func MonitoringHubStack(scope constructs.Construct, id string, props *Monitoring
 		jsii.String("sudo dnf install -y awscli"),
 	)
 
-	awsec2.NewInstance(stack, jsii.String("amir/MonitoringHubInstance"), &awsec2.InstanceProps{
+	// <--- RHEL 9 AMI - EC2 Instance --->
+	awsec2.NewInstance(stack, jsii.String("amir/MonitoringHubRHELInstance"), &awsec2.InstanceProps{
 		InstanceType: awsec2.NewInstanceType(jsii.String("t4g.small")),
-		// <--- Debian 12 AMI --->
-		// MachineImage: awsec2.MachineImage_Lookup(&awsec2.LookupMachineImageProps{
-		// 	Name:   jsii.String("RHEL-9.0.0_HVM-20220513-arm64-0-Hourly2-GP2"),
-		// 	Owners: jsii.Strings("136693071363"),
-		// 	Filters: &map[string]*[]*string{
-		// 		"architecture":        jsii.Strings("arm64"),
-		// 		"root-device-type":    jsii.Strings("ebs"),
-		// 		"virtualization-type": jsii.Strings("hvm"),
-		// 	},
-		// }),
-
-		// <--- RHEL 9 AMI --->
 		MachineImage: awsec2.MachineImage_Lookup(&awsec2.LookupMachineImageProps{
 			Name:   jsii.String("RHEL-9*"),
 			Owners: jsii.Strings("309956199498"),
@@ -99,7 +83,72 @@ func MonitoringHubStack(scope constructs.Construct, id string, props *Monitoring
 		KeyPair:                  keyPair,
 		AssociatePublicIpAddress: jsii.Bool(true),
 		SecurityGroup:            sg,
-		UserData:                 userData,
+		UserData:                 rhel_userData,
+	})
+
+	// <--- Debian 12  --->
+	debian_userData := awsec2.UserData_ForLinux(
+		&awsec2.LinuxUserDataOptions{
+			Shebang: jsii.String("#!/bin/bash"),
+		},
+	)
+
+	// <--- Debian 12 User Data --->
+	debian_userData.AddCommands(
+		jsii.String("sudo apt update"),
+		jsii.String("sudo apt install -y docker.io docker-compose awscli"),
+	)
+
+	// <--- Debian 12 AMI - EC2 Instance --->
+	awsec2.NewInstance(stack, jsii.String("amir/MonitoringHubDebianInstance"), &awsec2.InstanceProps{
+		InstanceType: awsec2.NewInstanceType(jsii.String("t4g.small")),
+		MachineImage: awsec2.MachineImage_Lookup(&awsec2.LookupMachineImageProps{
+			Name:   jsii.String("RHEL-9.0.0_HVM-20220513-arm64-0-Hourly2-GP2"),
+			Owners: jsii.Strings("136693071363"),
+			Filters: &map[string]*[]*string{
+				"architecture":        jsii.Strings("arm64"),
+				"root-device-type":    jsii.Strings("ebs"),
+				"virtualization-type": jsii.Strings("hvm"),
+			},
+		}),
+		Vpc:                      vpc,
+		VpcSubnets:               &awsec2.SubnetSelection{SubnetType: awsec2.SubnetType_PUBLIC},
+		KeyPair:                  keyPair,
+		AssociatePublicIpAddress: jsii.Bool(true),
+		SecurityGroup:            sg,
+		UserData:                 rhel_userData,
+	})
+
+	// <--- Windows --->
+	windows_userData := awsec2.UserData_ForWindows(&awsec2.WindowsUserDataOptions{})
+
+	// <--- Windows User Data --->
+	windows_userData.AddCommands(
+		jsii.String("powershell -Command \"[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\""),
+		jsii.String("powershell -Command \"Invoke-WebRequest -Uri https://awscli.amazonaws.com/AWSCLIV2.msi -OutFile C:\\AWSCLIV2.msi\""),
+		jsii.String("msiexec.exe /i C:\\AWSCLIV2.msi /qn"),
+		jsii.String("powershell -Command \"Invoke-WebRequest -Uri https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe -OutFile C:\\DockerDesktopInstaller.exe\""),
+		jsii.String("C:\\DockerDesktopInstaller.exe install --quiet"),
+	)
+
+	// <--- Windows Server 2022 AMI - EC2 Instance --->
+	awsec2.NewInstance(stack, jsii.String("amir/MonitoringHubWindowsInstance"), &awsec2.InstanceProps{
+		InstanceType: awsec2.NewInstanceType(jsii.String("t3.medium")),
+		MachineImage: awsec2.MachineImage_Lookup(&awsec2.LookupMachineImageProps{
+			Name:   jsii.String("Windows_Server-2022-English-Full-Base-*"),
+			Owners: jsii.Strings("801119661308"),
+			Filters: &map[string]*[]*string{
+				"architecture":        jsii.Strings("x86_64"),
+				"root-device-type":    jsii.Strings("ebs"),
+				"virtualization-type": jsii.Strings("hvm"),
+			},
+		}),
+		Vpc:                      vpc,
+		VpcSubnets:               &awsec2.SubnetSelection{SubnetType: awsec2.SubnetType_PUBLIC},
+		KeyPair:                  keyPair,
+		AssociatePublicIpAddress: jsii.Bool(true),
+		SecurityGroup:            sg,
+		UserData:                 windows_userData,
 	})
 
 	return stack
@@ -121,26 +170,9 @@ func main() {
 // env determines the AWS environment (account+region) in which our stack is to
 // be deployed. For more information see: https://docs.aws.amazon.com/cdk/latest/guide/environments.html
 func env() *awscdk.Environment {
-	// If unspecified, this stack will be "environment-agnostic".
-	// Account/Region-dependent features and context lookups will not work, but a
-	// single synthesized template can be deployed anywhere.
-	//---------------------------------------------------------------------------
-	// return nil
 
-	// Uncomment if you know exactly what account and region you want to deploy
-	// the stack to. This is the recommendation for production stacks.
-	//---------------------------------------------------------------------------
 	return &awscdk.Environment{
-		Account: jsii.String("530830676072"),
-		Region:  jsii.String("ap-southeast-1"),
+		Account: jsii.String(os.Getenv("AWS_ACCOUNT")),
+		Region:  jsii.String(os.Getenv("AWS_REGION")),
 	}
-
-	// Uncomment to specialize this stack for the AWS Account and Region that are
-	// implied by the current CLI configuration. This is recommended for dev
-	// stacks.
-	//---------------------------------------------------------------------------
-	// return &awscdk.Environment{
-	// 	Account: jsii.String(os.Getenv("CDK_DEFAULT_ACCOUNT")),
-	// 	Region:  jsii.String(os.Getenv("CDK_DEFAULT_REGION")),
-	// }
 }
