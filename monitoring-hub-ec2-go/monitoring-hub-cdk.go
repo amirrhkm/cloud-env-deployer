@@ -56,11 +56,38 @@ func MonitoringHubStack(scope constructs.Construct, id string, props *Monitoring
 		},
 	)
 
+	// <--- Debian 12 User Data --->
+	// userData.AddCommands(
+	// 	jsii.String("sudo apt update"),
+	// 	jsii.String("sudo apt install -y docker.io docker-compose awscli"),
+	// )
+
+	// <--- RHEL 9 User Data --->
+	userData.AddCommands(
+		jsii.String("sudo dnf update -y"),
+		jsii.String("sudo dnf install -y docker"),
+		jsii.String("sudo systemctl enable --now docker"),
+		jsii.String("sudo dnf install -y docker-compose"),
+		jsii.String("sudo dnf install -y awscli"),
+	)
+
 	awsec2.NewInstance(stack, jsii.String("amir/MonitoringHubInstance"), &awsec2.InstanceProps{
-		InstanceType: awsec2.NewInstanceType(jsii.String("t4g.nano")),
+		InstanceType: awsec2.NewInstanceType(jsii.String("t4g.small")),
+		// <--- Debian 12 AMI --->
+		// MachineImage: awsec2.MachineImage_Lookup(&awsec2.LookupMachineImageProps{
+		// 	Name:   jsii.String("RHEL-9.0.0_HVM-20220513-arm64-0-Hourly2-GP2"),
+		// 	Owners: jsii.Strings("136693071363"),
+		// 	Filters: &map[string]*[]*string{
+		// 		"architecture":        jsii.Strings("arm64"),
+		// 		"root-device-type":    jsii.Strings("ebs"),
+		// 		"virtualization-type": jsii.Strings("hvm"),
+		// 	},
+		// }),
+
+		// <--- RHEL 9 AMI --->
 		MachineImage: awsec2.MachineImage_Lookup(&awsec2.LookupMachineImageProps{
-			Name:   jsii.String("debian-12-arm64-*"),
-			Owners: jsii.Strings("136693071363"),
+			Name:   jsii.String("RHEL-9*"),
+			Owners: jsii.Strings("309956199498"),
 			Filters: &map[string]*[]*string{
 				"architecture":        jsii.Strings("arm64"),
 				"root-device-type":    jsii.Strings("ebs"),
@@ -103,17 +130,17 @@ func env() *awscdk.Environment {
 	// Uncomment if you know exactly what account and region you want to deploy
 	// the stack to. This is the recommendation for production stacks.
 	//---------------------------------------------------------------------------
-	// return &awscdk.Environment{
-	// 	Account: jsii.String("530830676072"),
-	// 	Region:  jsii.String("ap-southeast-1"),
-	// }
+	return &awscdk.Environment{
+		Account: jsii.String("530830676072"),
+		Region:  jsii.String("ap-southeast-1"),
+	}
 
 	// Uncomment to specialize this stack for the AWS Account and Region that are
 	// implied by the current CLI configuration. This is recommended for dev
 	// stacks.
 	//---------------------------------------------------------------------------
-	return &awscdk.Environment{
-		Account: jsii.String(os.Getenv("CDK_DEFAULT_ACCOUNT")),
-		Region:  jsii.String(os.Getenv("CDK_DEFAULT_REGION")),
-	}
+	// return &awscdk.Environment{
+	// 	Account: jsii.String(os.Getenv("CDK_DEFAULT_ACCOUNT")),
+	// 	Region:  jsii.String(os.Getenv("CDK_DEFAULT_REGION")),
+	// }
 }
