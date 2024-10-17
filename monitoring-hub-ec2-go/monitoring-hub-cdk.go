@@ -50,6 +50,12 @@ func MonitoringHubStack(scope constructs.Construct, id string, props *Monitoring
 
 	keyPair := awsec2.KeyPair_FromKeyPairName(stack, jsii.String("ExistingKeyPair"), jsii.String("amir"))
 
+	userData := awsec2.UserData_ForLinux(
+		&awsec2.LinuxUserDataOptions{
+			Shebang: jsii.String("#!/bin/bash"),
+		},
+	)
+
 	awsec2.NewInstance(stack, jsii.String("amir/MonitoringHubInstance"), &awsec2.InstanceProps{
 		InstanceType: awsec2.NewInstanceType(jsii.String("t4g.nano")),
 		MachineImage: awsec2.MachineImage_Lookup(&awsec2.LookupMachineImageProps{
@@ -66,6 +72,7 @@ func MonitoringHubStack(scope constructs.Construct, id string, props *Monitoring
 		KeyPair:                  keyPair,
 		AssociatePublicIpAddress: jsii.Bool(true),
 		SecurityGroup:            sg,
+		UserData:                 userData,
 	})
 
 	return stack
@@ -96,17 +103,17 @@ func env() *awscdk.Environment {
 	// Uncomment if you know exactly what account and region you want to deploy
 	// the stack to. This is the recommendation for production stacks.
 	//---------------------------------------------------------------------------
-	return &awscdk.Environment{
-		Account: jsii.String("530830676072"),
-		Region:  jsii.String("ap-southeast-1"),
-	}
+	// return &awscdk.Environment{
+	// 	Account: jsii.String("530830676072"),
+	// 	Region:  jsii.String("ap-southeast-1"),
+	// }
 
 	// Uncomment to specialize this stack for the AWS Account and Region that are
 	// implied by the current CLI configuration. This is recommended for dev
 	// stacks.
 	//---------------------------------------------------------------------------
-	// return &awscdk.Environment{
-	//  Account: jsii.String(os.Getenv("CDK_DEFAULT_ACCOUNT")),
-	//  Region:  jsii.String(os.Getenv("CDK_DEFAULT_REGION")),
-	// }
+	return &awscdk.Environment{
+		Account: jsii.String(os.Getenv("CDK_DEFAULT_ACCOUNT")),
+		Region:  jsii.String(os.Getenv("CDK_DEFAULT_REGION")),
+	}
 }
