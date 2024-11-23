@@ -4,12 +4,10 @@
 **Overview**
 ------------
 
-This repository contains Infrastructure-as-Code (IaC) scripts and configurations for provisioning and managing cloud resources across various cloud platforms. The repository includes code for both **Terraform** and **AWS CDK** to support multi-cloud deployments and provide flexibility for different use cases.
+This repository contains Infrastructure-as-Code (IaC) scripts and configurations for provisioning and managing cloud resources across various cloud platforms. The repository includes **AWS CDK** to support cloud deployments and provide flexibility for different use cases.
 
 ### **Key Technologies**:
 
-*   **Terraform**: Declarative multi-cloud infrastructure management.
-    
 *   **AWS CDK**: Imperative code-based AWS infrastructure provisioning.
     
 
@@ -19,10 +17,6 @@ This repository contains Infrastructure-as-Code (IaC) scripts and configurations
 The repository is organized into separate folders for different IaC tools and environments:
  
 ```bash
-├── terraform/          # Terraform scripts and modules
-│   ├── vpc/            # Terraform VPC configuration
-│   ├── ec2/            # Terraform EC2 configuration
-│   └── ...             # Other Terraform resources
 ├── cdk/                # AWS CDK stacks and constructs
 │   ├── lib/            # CDK VPC, EC2, S3 configurations
 │   ├── bin/            # CDK application entry points
@@ -37,13 +31,13 @@ The repository is organized into separate folders for different IaC tools and en
 
 Before using the IaC scripts in this repository, ensure that you have the following installed:
 
-*   **Terraform**: Install Terraform
-    
 *   **AWS CDK**: [Install AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html)
     
 *   **AWS CLI**: [Install AWS CLI](https://aws.amazon.com/cli/)
     
 *   **Node.js**: Required for CDK (Install from [Node.js website](https://nodejs.org/))
+
+*   **GoLang**: Required for CDK (Install from [Go website](https://go.dev/dl/))
     
 
 ### **AWS Authentication**
@@ -55,18 +49,6 @@ aws configure
 ```
 
 Provide your AWS access key, secret access key, and region.
-
-**Deploying with Terraform**
-----------------------------
-
-To deploy infrastructure using **Terraform**, navigate to the desired module (e.g., terraform/vpc/):
-
-```bash
-codecd terraform/vpc/
-terraform init          # Initialize the Terraform project
-terraform plan          # Preview the changes that will be applied
-terraform apply         # Apply the changes to provision resources
- ```
 
 **Deploying with AWS CDK**
 --------------------------
@@ -92,27 +74,12 @@ To deploy infrastructure using **AWS CDK**, follow these steps:
 **Repository Structure**
 ------------------------
 
-### **Terraform Modules**
-
-Terraform modules are reusable building blocks for infrastructure. Each module defines a specific set of resources (e.g., VPC, EC2, RDS). The Terraform modules are located in the terraform/ directory.
-
 ### **AWS CDK Stacks**
 
 The **AWS CDK** stack files are located in the cdk/ directory. These are structured with reusable constructs in lib/ and entry-point scripts in bin/.
 
 **Useful Commands**
 -------------------
-
-### **Terraform Commands**
-
-*   `terraform init`: Initialize the Terraform project.
-    
-*   `terraform plan`: Show the resources to be created/modified.
-    
-*   `terraform apply`: Apply the changes and deploy resources.
-    
-*   `terraform destroy`: Remove all resources managed by Terraform.
-    
 
 ### **AWS CDK Commands**
 
@@ -127,12 +94,6 @@ The **AWS CDK** stack files are located in the cdk/ directory. These are str
 
 **Cleanup**
 -----------
-
-To remove resources created by **Terraform**:
-
-```bash
-terraform destroy
-```
 
 To remove resources created by **AWS CDK**:
 
