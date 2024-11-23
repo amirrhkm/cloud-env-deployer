@@ -101,6 +101,12 @@ To remove resources created by **AWS CDK**:
 cdk destroy
 ```
 
+**Available CDK IaC**
+----------------------------------
+1. monitoring-hub EC2 instances available in RHEL 9 and Debian 12
+2. monitoring-hub S3 buckets named "monitoring-repositories"
+3. a VPC with Nginx reverse proxy
+
 **SSB RONPOS Staging Environment**
 ----------------------------------
 
