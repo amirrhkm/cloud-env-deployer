@@ -28,27 +28,80 @@ func MonitoringHubStack(scope constructs.Construct, id string, props *Monitoring
 	awscdk.Tags_Of(stack).Add(jsii.String("silentmode:environment"), jsii.String(silentmode_environment), nil)
 	awscdk.Tags_Of(stack).Add(jsii.String("silentmode:service"), jsii.String(silentmode_service), nil)
 
-	vpc := awsec2.NewVpc(stack, jsii.String("amir/MonitoringHubVPC"), &awsec2.VpcProps{
+	vpc := awsec2.NewVpc(stack, jsii.String("TempInstance/ProactiveMonitoringVPC"), &awsec2.VpcProps{
 		MaxAzs:      jsii.Number(1),
 		NatGateways: jsii.Number(0),
 		SubnetConfiguration: &[]*awsec2.SubnetConfiguration{
 			{
 				CidrMask:   jsii.Number(24),
-				Name:       jsii.String("amir/MH-PublicSubnet"),
+				Name:       jsii.String("PM-PublicSubnet"),
 				SubnetType: awsec2.SubnetType_PUBLIC,
 			},
 		},
 	})
 
-	sg := awsec2.NewSecurityGroup(stack, jsii.String("amir/MonitoringHubSG"), &awsec2.SecurityGroupProps{
+	sg := awsec2.NewSecurityGroup(stack, jsii.String("TempInstance/ProactiveMonitoringSG"), &awsec2.SecurityGroupProps{
 		Vpc:              vpc,
-		Description:      jsii.String("amir/MonitoringHubSG"),
+		Description:      jsii.String("ProactiveMonitoringSG"),
 		AllowAllOutbound: jsii.Bool(true),
 	})
 
 	sg.AddIngressRule(awsec2.Peer_AnyIpv4(), awsec2.Port_AllTraffic(), jsii.String("Allow all inbound traffic"), nil)
 
 	keyPair := awsec2.KeyPair_FromKeyPairName(stack, jsii.String("ExistingKeyPair"), jsii.String("amir"))
+
+	// <--- Linux --->
+	linux_userData := awsec2.UserData_ForLinux(
+		&awsec2.LinuxUserDataOptions{
+			Shebang: jsii.String("#!/bin/bash"),
+		},
+	)
+
+	// <--- Linux User Data --->
+	linux_userData.AddCommands(
+		jsii.String("sudo apt update"),
+		jsii.String("sudo apt install -y docker.io docker-compose awscli rsyslog"),
+	)
+
+	// <--- Debian 12 AMI - EC2 Instance --->
+	awsec2.NewInstance(stack, jsii.String("TempInstance/RsyslogSandbox"), &awsec2.InstanceProps{
+		InstanceType: awsec2.NewInstanceType(jsii.String("t4g.small")),
+		MachineImage: awsec2.MachineImage_Lookup(&awsec2.LookupMachineImageProps{
+			Name:   jsii.String("debian-12-arm64-*"),
+			Owners: jsii.Strings("136693071363"),
+			Filters: &map[string]*[]*string{
+				"architecture":        jsii.Strings("arm64"),
+				"root-device-type":    jsii.Strings("ebs"),
+				"virtualization-type": jsii.Strings("hvm"),
+			},
+		}),
+		Vpc:                      vpc,
+		VpcSubnets:               &awsec2.SubnetSelection{SubnetType: awsec2.SubnetType_PUBLIC},
+		KeyPair:                  keyPair,
+		AssociatePublicIpAddress: jsii.Bool(true),
+		SecurityGroup:            sg,
+		UserData:                 linux_userData,
+	})
+
+	// <--- Ubuntu 22.04 AMI - EC2 Instance --->
+	awsec2.NewInstance(stack, jsii.String("RsyslogSandbox"), &awsec2.InstanceProps{
+		InstanceType: awsec2.NewInstanceType(jsii.String("t3.medium")),
+		MachineImage: awsec2.MachineImage_Lookup(&awsec2.LookupMachineImageProps{
+			Name:   jsii.String("ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"),
+			Owners: jsii.Strings("099720109477"),
+			Filters: &map[string]*[]*string{
+				"architecture":        jsii.Strings("x86_64"),
+				"root-device-type":    jsii.Strings("ebs"),
+				"virtualization-type": jsii.Strings("hvm"),
+			},
+		}),
+		Vpc:                      vpc,
+		VpcSubnets:               &awsec2.SubnetSelection{SubnetType: awsec2.SubnetType_PUBLIC},
+		KeyPair:                  keyPair,
+		AssociatePublicIpAddress: jsii.Bool(true),
+		SecurityGroup:            sg,
+		UserData:                 linux_userData,
+	})
 
 	// <--- RHEL 9 --->
 	rhel_userData := awsec2.UserData_ForLinux(
@@ -62,8 +115,17 @@ func MonitoringHubStack(scope constructs.Construct, id string, props *Monitoring
 		jsii.String("sudo dnf update -y"),
 		jsii.String("sudo dnf install -y docker"),
 		jsii.String("sudo systemctl enable --now docker"),
-		jsii.String("sudo dnf install -y docker-compose"),
-		jsii.String("sudo dnf install -y awscli"),
+		jsii.String("sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y"),
+		jsii.String("sudo dnf install -y neofetch"),
+		jsii.String("sudo yum install -y unzip"),
+		jsii.String("curl \"https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip\" -o \"awscliv2.zip\""),
+		jsii.String("unzip awscliv2.zip"),
+		jsii.String("sudo ./aws/install"),
+		jsii.String("sudo yum install -y yum-utils"),
+		jsii.String("sudo yum-config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo"),
+		jsii.String("sudo yum update -y"),
+		jsii.String("sudo yum install -y docker-compose-plugin"),
+		jsii.String("sudo dnf install -y dpkg"),
 	)
 
 	// <--- RHEL 9 AMI - EC2 Instance --->
@@ -72,39 +134,6 @@ func MonitoringHubStack(scope constructs.Construct, id string, props *Monitoring
 		MachineImage: awsec2.MachineImage_Lookup(&awsec2.LookupMachineImageProps{
 			Name:   jsii.String("RHEL-9*"),
 			Owners: jsii.Strings("309956199498"),
-			Filters: &map[string]*[]*string{
-				"architecture":        jsii.Strings("arm64"),
-				"root-device-type":    jsii.Strings("ebs"),
-				"virtualization-type": jsii.Strings("hvm"),
-			},
-		}),
-		Vpc:                      vpc,
-		VpcSubnets:               &awsec2.SubnetSelection{SubnetType: awsec2.SubnetType_PUBLIC},
-		KeyPair:                  keyPair,
-		AssociatePublicIpAddress: jsii.Bool(true),
-		SecurityGroup:            sg,
-		UserData:                 rhel_userData,
-	})
-
-	// <--- Debian 12  --->
-	debian_userData := awsec2.UserData_ForLinux(
-		&awsec2.LinuxUserDataOptions{
-			Shebang: jsii.String("#!/bin/bash"),
-		},
-	)
-
-	// <--- Debian 12 User Data --->
-	debian_userData.AddCommands(
-		jsii.String("sudo apt update"),
-		jsii.String("sudo apt install -y docker.io docker-compose awscli"),
-	)
-
-	// <--- Debian 12 AMI - EC2 Instance --->
-	awsec2.NewInstance(stack, jsii.String("amir/MonitoringHubDebianInstance"), &awsec2.InstanceProps{
-		InstanceType: awsec2.NewInstanceType(jsii.String("t4g.small")),
-		MachineImage: awsec2.MachineImage_Lookup(&awsec2.LookupMachineImageProps{
-			Name:   jsii.String("RHEL-9.0.0_HVM-20220513-arm64-0-Hourly2-GP2"),
-			Owners: jsii.Strings("136693071363"),
 			Filters: &map[string]*[]*string{
 				"architecture":        jsii.Strings("arm64"),
 				"root-device-type":    jsii.Strings("ebs"),
@@ -158,7 +187,7 @@ func main() {
 
 	app := awscdk.NewApp(nil)
 
-	MonitoringHubStack(app, "MonitoringHubCdkStack", &MonitoringHubProps{
+	MonitoringHubStack(app, "TempInstance/AmirStack", &MonitoringHubProps{
 		StackProps: awscdk.StackProps{
 			Env: env(),
 		},
@@ -167,12 +196,12 @@ func main() {
 	app.Synth(nil)
 }
 
-// env determines the AWS environment (account+region) in which our stack is to
-// be deployed. For more information see: https://docs.aws.amazon.com/cdk/latest/guide/environments.html
+// monitoring: 715841329405
+// ronpos-staging: 530830676072
 func env() *awscdk.Environment {
 
 	return &awscdk.Environment{
-		Account: jsii.String(os.Getenv("AWS_ACCOUNT")),
-		Region:  jsii.String(os.Getenv("AWS_REGION")),
+		Account: jsii.String("715841329405"),
+		Region:  jsii.String("ap-southeast-1"),
 	}
 }
