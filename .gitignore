@@ -1,1 +1,3 @@
 localstack
+monitoring-env/monitoring-hub
+monitoring-env/monitoring-mock-hub-gw
