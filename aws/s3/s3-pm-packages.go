@@ -7,19 +7,19 @@ import (
 	"github.com/aws/jsii-runtime-go"
 )
 
-type MyStackProps struct {
+type ProvisioningStackProps struct {
 	awscdk.StackProps
 }
 
-func MonitoringHubStack(scope constructs.Construct, id string, props *MyStackProps) awscdk.Stack {
+func ProvisioningStack(scope constructs.Construct, id string, props *ProvisioningStackProps) awscdk.Stack {
 	var sprops awscdk.StackProps
 	if props != nil {
 		sprops = props.StackProps
 	}
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
-	bucket := awss3.NewBucket(stack, jsii.String("MonitoringRepositoriesBucket"), &awss3.BucketProps{
-		BucketName:        jsii.String("monitoring-repositories"),
+	bucket := awss3.NewBucket(stack, jsii.String("ProvisioningBucket"), &awss3.BucketProps{
+		BucketName:        jsii.String("provisioning"),
 		Versioned:         jsii.Bool(true),
 		RemovalPolicy:     awscdk.RemovalPolicy_DESTROY,
 		AutoDeleteObjects: jsii.Bool(true),
@@ -27,8 +27,8 @@ func MonitoringHubStack(scope constructs.Construct, id string, props *MyStackPro
 
 	awscdk.NewCfnOutput(stack, jsii.String("BucketName"), &awscdk.CfnOutputProps{
 		Value:       bucket.BucketName(),
-		Description: jsii.String("Monitoring Repositories Bucket"),
-		ExportName:  jsii.String("MonitoringRepositoriesBucket"),
+		Description: jsii.String("Provisioning Bucket"),
+		ExportName:  jsii.String("ProvisioningBucket"),
 	})
 
 	return stack
@@ -37,7 +37,7 @@ func MonitoringHubStack(scope constructs.Construct, id string, props *MyStackPro
 func main() {
 	app := awscdk.NewApp(nil)
 
-	MonitoringHubStack(app, "MonitoringRepositoriesStack", &MyStackProps{
+	ProvisioningStack(app, "ProvisioningStack", &ProvisioningStackProps{
 		awscdk.StackProps{
 			Env: env(),
 		},

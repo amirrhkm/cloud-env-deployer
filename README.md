@@ -19,16 +19,16 @@ This repository contains Infrastructure-as-Code (IaC) scripts and configurations
 The repository is organized into separate folders for different IaC tools and environments:
  
 ```bash
-├── terraform/          # Terraform scripts and modules
-│   ├── vpc/            # Terraform VPC configuration
-│   ├── ec2/            # Terraform EC2 configuration
-│   └── ...             # Other Terraform resources
-├── cdk/                # AWS CDK stacks and constructs
-│   ├── lib/            # CDK VPC, EC2, S3 configurations
-│   ├── bin/            # CDK application entry points
-│   └── ...             # Other CDK resources
-├── scripts/            # Utility scripts (e.g., deployment, testing)
-└── README.md           # Documentation and instructions
+├── terraform/                      # Terraform scripts and modules
+│   ├── vpc/                        # Terraform VPC configuration
+│   ├── ec2/                        # Terraform EC2 configuration
+│   └── ...                         # Other Terraform resources
+├── aws/                            # AWS CDK stacks and constructs
+│   ├── ec2/                        # CDK EC2 configuration
+│   │   └── provisioning-cdk.go     # CDK provisioning scripts
+│   └── s3/                         # CDK S3 configuration
+│   │   └── provisioning-cdk.go     # CDK provisioning scripts
+└── README.md                       # Documentation and instructions
 ```
 **Getting Started**
 -------------------
