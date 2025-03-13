@@ -1,5 +1,5 @@
 {
-  "app": "go mod download && go run monitoring-hub-cdk.go",
+  "app": "provisioning-cdk",
   "watch": {
     "include": [
       "**"

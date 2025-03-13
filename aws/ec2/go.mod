@@ -1,4 +1,4 @@
-module monitoring-hub-cdk
+module provisioning-cdk
 
 go 1.18
 
